@@ -233,9 +233,15 @@ impl ScigenGenerator {
 
     pub fn pretty_print(&self, text: &str) -> String {
         let mut result = String::new();
+        let mut is_first_line = true;
+        let mut prev_was_section = false;
         
         for line in text.lines() {
             let mut processed = line.to_string();
+            
+            // Check if this line is a section/subsection header
+            let is_section = line.trim_start().starts_with("\\section") || 
+                            line.trim_start().starts_with("\\subsection");
             
             // Remove spaces before punctuation (Perl: s/(\s+)([\.\,\?\;\:])/$2/g)
             processed = processed.replace(" .", ".");
@@ -243,6 +249,32 @@ impl ScigenGenerator {
             processed = processed.replace(" ?", "?");
             processed = processed.replace(" ;", ";");
             processed = processed.replace(" :", ":");
+            
+            // Capitalize first letter of sentences
+            let chars: Vec<char> = processed.chars().collect();
+            // Capitalize at start, after section headers, or after sentence-ending punctuation
+            let mut need_cap = is_first_line || (prev_was_section && !line.trim().is_empty());
+            let mut capitalized = String::new();
+            
+            for i in 0..chars.len() {
+                let ch = chars[i];
+                
+                if need_cap && ch.is_alphabetic() {
+                    capitalized.push(ch.to_uppercase().next().unwrap());
+                    need_cap = false;
+                } else {
+                    capitalized.push(ch);
+                }
+                
+                // Set flag to capitalize after sentence-ending punctuation + space
+                if (ch == '.' || ch == '!' || ch == '?') && i + 1 < chars.len() {
+                    if chars[i + 1].is_whitespace() {
+                        need_cap = true;
+                    }
+                }
+            }
+            
+            processed = capitalized;
             
             // Fix "a" vs "an" before vowels (Perl: s/(\b)(a)\s+([aeiou])/$1$2n $3/gi)
             let chars: Vec<char> = processed.chars().collect();
@@ -270,6 +302,8 @@ impl ScigenGenerator {
             
             result.push_str(&fixed);
             result.push('\n');
+            is_first_line = false;
+            prev_was_section = is_section; // Track for next line
         }
         
         result
