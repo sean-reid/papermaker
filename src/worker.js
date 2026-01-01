@@ -4,7 +4,8 @@ let rulesText = null
 // Load WASM module
 async function initWasm() {
   try {
-    const wasmUrl = new URL('/wasm/scigen_wasm.js', self.location.origin)
+    // Use import.meta.url to get proper base path
+    const wasmUrl = new URL('../wasm/scigen_wasm.js', import.meta.url)
     const module = await import(wasmUrl.href)
     await module.default()
     wasmModule = module
@@ -18,7 +19,9 @@ async function initWasm() {
 // Load rules file
 async function loadRules() {
   try {
-    const response = await fetch('/scirules.txt')
+    // Use import.meta.url to get proper base path
+    const rulesUrl = new URL('../scirules.txt', import.meta.url)
+    const response = await fetch(rulesUrl.href)
     rulesText = await response.text()
     console.log('Rules loaded:', rulesText.length, 'bytes')
   } catch (error) {
