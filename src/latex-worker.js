@@ -81,6 +81,7 @@ self.onmessage = async (e) => {
       const bibEntryCount = bibliography ? (bibliography.match(/@\w+\{/g) || []).length : 0
       
       if (bibEntryCount > 0) {
+        // Replace \cite{} commands
         modifiedLatex = modifiedLatex.replace(/\\cite\{[^}]+\}/g, () => {
           const numCites = 1 + Math.floor(Math.random() * Math.min(3, bibEntryCount))
           const cites = []
@@ -93,22 +94,28 @@ self.onmessage = async (e) => {
           cites.sort((a, b) => a - b)
           return `~[${cites.join(',')}]`
         })
+        
+        // Also replace any literal "cite:X" text that escaped
+        modifiedLatex = modifiedLatex.replace(/cite:\d+/g, () => {
+          const randomNum = 1 + Math.floor(Math.random() * bibEntryCount)
+          return `[${randomNum}]`
+        })
       }
       
       // Count how many figures we have
       const figureCount = (modifiedLatex.match(/\\begin\{figure\}/g) || []).length
       
       if (figureCount > 0) {
-        // Replace Figure ?? with random valid figure numbers
-        modifiedLatex = modifiedLatex.replace(/Figure\s*\?\?/g, () => {
+        // Replace ALL \ref{fig:...} and \ref{dia:...} with random figure numbers
+        modifiedLatex = modifiedLatex.replace(/\\ref\{(fig|dia):[^}]+\}/g, () => {
           const randomFig = 1 + Math.floor(Math.random() * figureCount)
-          return `Figure~${randomFig}`
+          return randomFig.toString()
         })
         
-        // Also replace \ref{fig:label??} and similar patterns
-        modifiedLatex = modifiedLatex.replace(/\\ref\{[^}]*\?\?[^}]*\}/g, () => {
+        // Also replace any remaining \ref{} in case there are other patterns
+        modifiedLatex = modifiedLatex.replace(/\\ref\{[^}]+\}/g, () => {
           const randomFig = 1 + Math.floor(Math.random() * figureCount)
-          return `${randomFig}`
+          return randomFig.toString()
         })
       }
       
