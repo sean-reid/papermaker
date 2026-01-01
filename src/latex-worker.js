@@ -20,7 +20,18 @@ function gnuplotToTikz(gnuplotCommands) {
     return rng / 0x7fffffff
   }
   
-  const width = '\\columnwidth', height = '4.5cm'
+  // Use 0.95\columnwidth to ensure plots fit within column with margin
+  const width = '0.95\\columnwidth', height = '5cm'
+  
+  // Common black and white styling for all plots
+  const commonStyle = [
+    'axis line style={black}',
+    'tick style={black}',
+    'tick label style={font=\\scriptsize}',
+    'xlabel style={font=\\small}',
+    'ylabel style={font=\\small}',
+    'grid style={black!10, thin}'
+  ].join(',')
   
   if (plotType === 'scatter') {
     const points = []
@@ -28,8 +39,14 @@ function gnuplotToTikz(gnuplotCommands) {
       points.push(`(${(rand() * 100).toFixed(1)},${(rand() * 100 + Math.sin(rand() * 10) * 20).toFixed(1)})`)
     }
     return `\\begin{tikzpicture}
-  \\begin{axis}[width=${width},height=${height},xlabel={\\small ${xlabel}},ylabel={\\small ${ylabel}},only marks,mark=*,mark size=0.8pt,tick label style={font=\\scriptsize}]
-  \\addplot coordinates {${points.join(' ')}};
+  \\begin{axis}[
+    width=${width},
+    height=${height},
+    xlabel={${xlabel}},
+    ylabel={${ylabel}},
+    ${commonStyle}
+  ]
+  \\addplot[black, only marks, mark=*, mark size=1.5pt] coordinates {${points.join(' ')}};
   \\end{axis}
 \\end{tikzpicture}`
   } else if (plotType === 'bar') {
@@ -38,8 +55,17 @@ function gnuplotToTikz(gnuplotCommands) {
       bars.push(`(${i},${(10 + rand() * 80).toFixed(1)})`)
     }
     return `\\begin{tikzpicture}
-  \\begin{axis}[width=${width},height=${height},ybar,xlabel={\\small ${xlabel}},ylabel={\\small ${ylabel}},xtick=data,bar width=6pt,tick label style={font=\\scriptsize}]
-  \\addplot[fill=black!20] coordinates {${bars.join(' ')}};
+  \\begin{axis}[
+    width=${width},
+    height=${height},
+    xlabel={${xlabel}},
+    ylabel={${ylabel}},
+    ${commonStyle},
+    ybar,
+    xtick=data,
+    bar width=6pt
+  ]
+  \\addplot[fill=black!15, draw=black] coordinates {${bars.join(' ')}};
   \\end{axis}
 \\end{tikzpicture}`
   } else {
@@ -48,8 +74,15 @@ function gnuplotToTikz(gnuplotCommands) {
       points.push(`(${i},${(20 + rand() * 60 + Math.sin(i * 0.5) * 15).toFixed(1)})`)
     }
     return `\\begin{tikzpicture}
-  \\begin{axis}[width=${width},height=${height},xlabel={\\small ${xlabel}},ylabel={\\small ${ylabel}},grid=major,tick label style={font=\\scriptsize}]
-  \\addplot[black,thick] coordinates {${points.join(' ')}};
+  \\begin{axis}[
+    width=${width},
+    height=${height},
+    xlabel={${xlabel}},
+    ylabel={${ylabel}},
+    ${commonStyle},
+    grid=major
+  ]
+  \\addplot[black, thick, mark=none] coordinates {${points.join(' ')}};
   \\end{axis}
 \\end{tikzpicture}`
   }
