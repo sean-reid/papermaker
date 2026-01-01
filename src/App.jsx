@@ -26,8 +26,8 @@ function App() {
         setLatexContent(latex)
         setIsLoading(false)
         
-        // Now compile to PDF
-        compileLaTeX(latex)
+        // Automatically compile to PDF
+        compileToPDF(latex)
       } else if (e.data.type === 'error') {
         console.error('SCIGen error:', e.data.error)
         setError('Failed to generate paper: ' + e.data.error)
@@ -43,15 +43,17 @@ function App() {
 
     latexWorkerRef.current.onmessage = (e) => {
       if (e.data.type === 'pdf-compiled') {
-        const pdfBlob = new Blob([new Uint8Array(e.data.pdfBytes)], { 
+        // Create blob directly from ArrayBuffer
+        const pdfBlob = new Blob([e.data.pdfData], { 
           type: 'application/pdf' 
         })
         const url = URL.createObjectURL(pdfBlob)
         setPdfUrl(url)
         setIsCompiling(false)
       } else if (e.data.type === 'error') {
-        console.error('LaTeX error:', e.data.error, e.data.log)
-        setError('Failed to compile LaTeX: ' + e.data.error)
+        console.error('LaTeX compilation error:', e.data.error)
+        // Show error but keep LaTeX available for download
+        setError(e.data.error)
         setIsCompiling(false)
       }
     }
@@ -93,7 +95,7 @@ function App() {
     })
   }
 
-  const compileLaTeX = (latex) => {
+  const compileToPDF = (latex) => {
     if (!latexWorkerRef.current) return
     
     setIsCompiling(true)
@@ -134,8 +136,8 @@ function App() {
           <p className="text-gray-600">
             Generate random computer science papers using SCIGen
           </p>
-          <p className="text-sm text-gray-500 mt-2">
-            With real LaTeX compilation - math, figures, and all
+          <p className="text-sm text-gray-500 mt-1">
+            With real LaTeX compilation and PDF preview
           </p>
         </div>
 
@@ -185,7 +187,7 @@ function App() {
           </button>
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800 whitespace-pre-wrap">
               {error}
             </div>
           )}
@@ -194,7 +196,7 @@ function App() {
         {pdfUrl && (
           <div className="space-y-4">
             <div className="bg-green-50 border border-green-200 rounded-md p-4 text-sm text-green-800">
-              ✓ Paper compiled successfully with full LaTeX rendering (math, figures, formatting)
+              ✓ Paper compiled successfully with full LaTeX rendering
             </div>
             
             <div className="flex justify-end gap-2">
@@ -202,7 +204,7 @@ function App() {
                 onClick={downloadLaTeX}
                 className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               >
-                Download LaTeX Source
+                Download LaTeX
               </button>
               <button
                 onClick={downloadPDF}
@@ -216,13 +218,25 @@ function App() {
               <iframe
                 src={pdfUrl}
                 className="w-full h-full"
-                title="Generated Paper"
+                title="Generated Paper PDF"
               />
             </div>
           </div>
         )}
 
-        {!pdfUrl && !isLoading && !isCompiling && !error && (
+        {latexContent && !pdfUrl && !isCompiling && (
+          <div className="text-center text-gray-500 py-8">
+            <p className="mb-4">LaTeX source generated. Compiling to PDF...</p>
+            <button
+              onClick={downloadLaTeX}
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              Download LaTeX Source
+            </button>
+          </div>
+        )}
+
+        {!latexContent && !isLoading && !error && (
           <div className="text-center text-gray-500 py-12">
             Click "Generate Paper" to create a new paper
           </div>

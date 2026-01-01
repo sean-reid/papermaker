@@ -107,18 +107,20 @@ impl ScigenGenerator {
     }
 
     fn expand(&mut self, start: &str) -> String {
-        // Handle special counter rules (ending in +)
-        if start.ends_with('+') {
-            let rule = start.trim_end_matches('+');
+        // Handle special counter rules (ending in \+ or \#)
+        // The backslash is in the rule NAME, but we check the actual pattern
+        let pattern = start.replace("\\+", "+").replace("\\#", "#");
+        
+        if pattern.ends_with('+') {
+            let rule = pattern.trim_end_matches('+');
             let counter = self.counters.entry(rule.to_string()).or_insert(0);
             let result = counter.to_string();
             *counter += 1;
             return result;
         }
         
-        // Handle special random counter rules (ending in #)
-        if start.ends_with('#') {
-            let rule = start.trim_end_matches('#');
+        if pattern.ends_with('#') {
+            let rule = pattern.trim_end_matches('#');
             let counter = *self.counters.get(rule).unwrap_or(&0);
             if counter == 0 {
                 return "0".to_string();
@@ -171,64 +173,62 @@ impl ScigenGenerator {
     }
 
     fn expand_input(&mut self, input: &str) -> String {
-        // Build a sorted list of rule names (longest first for greedy matching)
-        let mut rule_names: Vec<String> = self.rules.keys().cloned().collect();
-        rule_names.sort_by(|a, b| b.len().cmp(&a.len()));
+        let mut components = Vec::new();
+        let mut remaining = input.to_string();
         
-        let mut result = String::new();
-        let mut remaining = input;
+        // Build sorted list of rule names (longest first)
+        // Convert regex patterns: \+ → +, \# → #, etc.
+        let mut rule_patterns: Vec<(String, String)> = self.rules.keys()
+            .map(|name| {
+                let pattern = name
+                    .replace("\\+", "+")
+                    .replace("\\#", "#")
+                    .replace("\\{", "{")
+                    .replace("\\}", "}")
+                    .replace("\\(", "(")
+                    .replace("\\)", ")");
+                (name.clone(), pattern)
+            })
+            .collect();
         
+        // Sort by pattern length (longest first) for greedy matching
+        rule_patterns.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
+        
+        // Pop first rule repeatedly until none remain
         while !remaining.is_empty() {
-            let mut found = false;
-            let mut best_match: Option<(&str, usize, usize)> = None;
+            let mut best_match: Option<(String, usize, usize)> = None;
             
-            // Find the earliest matching rule (greedy longest match first)
-            for rule_name in &rule_names {
-                if let Some(pos) = remaining.find(rule_name.as_str()) {
-                    // Check if this is a complete token (not part of another word)
-                    let is_start_boundary = pos == 0 || {
-                        let prev_char = remaining.chars().nth(pos - 1).unwrap();
-                        !prev_char.is_alphanumeric() && prev_char != '_'
-                    };
-                    
-                    let end_pos = pos + rule_name.len();
-                    let is_end_boundary = end_pos >= remaining.len() || {
-                        let next_char = remaining.chars().nth(end_pos).unwrap();
-                        !next_char.is_alphanumeric() && next_char != '_'
-                    };
-                    
-                    if is_start_boundary && is_end_boundary {
-                        // This is a valid match - take the first (earliest) one
-                        if best_match.is_none() || pos < best_match.unwrap().1 {
-                            best_match = Some((rule_name, pos, end_pos));
-                        }
+            // Find the earliest matching rule pattern (NO boundary checking!)
+            for (rule_name, pattern) in &rule_patterns {
+                if let Some(pos) = remaining.find(pattern.as_str()) {
+                    // Take earliest match (leftmost)
+                    if best_match.is_none() || pos < best_match.as_ref().unwrap().1 {
+                        let end_pos = pos + pattern.len();
+                        best_match = Some((rule_name.clone(), pos, end_pos));
                     }
                 }
             }
             
-            if let Some((rule_name, start, end)) = best_match {
-                // Add text before the match
-                if start > 0 {
-                    result.push_str(&remaining[..start]);
+            if let Some((rule_name, start_pos, end_pos)) = best_match {
+                // Add preamble
+                if start_pos > 0 {
+                    components.push(remaining[..start_pos].to_string());
                 }
                 
-                // Expand the rule recursively
-                let expanded = self.expand(rule_name);
-                result.push_str(&expanded);
+                // Expand the rule (use original name with backslash)
+                let expanded = self.expand(&rule_name);
+                components.push(expanded);
                 
                 // Continue with remainder
-                remaining = &remaining[end..];
-                found = true;
-            }
-            
-            if !found {
-                // No more rules found, add remaining text
-                result.push_str(remaining);
+                remaining = remaining[end_pos..].to_string();
+            } else {
+                // No more rules - add what's left
+                components.push(remaining);
                 break;
             }
         }
         
-        result
+        components.join("")
     }
 
     pub fn pretty_print(&self, text: &str) -> String {
