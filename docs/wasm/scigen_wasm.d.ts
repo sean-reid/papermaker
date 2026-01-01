@@ -11,6 +11,10 @@ export class ScigenGenerator {
   generate(start_rule: string): string;
 }
 
+export function generate_bibtex_entry(seed: bigint, cite_label: string, sysname: string, rules: string): string;
+
+export function generate_graph_data(seed: bigint, graph_rules: string): string;
+
 export function generate_paper(seed: bigint, author1: string, author2: string, sysname: string, rules: string): string;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -18,6 +22,8 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly __wbg_scigengenerator_free: (a: number, b: number) => void;
+  readonly generate_bibtex_entry: (a: bigint, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number];
+  readonly generate_graph_data: (a: bigint, b: number, c: number) => [number, number];
   readonly generate_paper: (a: bigint, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => [number, number];
   readonly scigengenerator_add_rule: (a: number, b: number, c: number, d: number, e: number) => void;
   readonly scigengenerator_generate: (a: number, b: number, c: number) => [number, number];

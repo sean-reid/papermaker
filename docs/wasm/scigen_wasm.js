@@ -163,6 +163,52 @@ if (Symbol.dispose) ScigenGenerator.prototype[Symbol.dispose] = ScigenGenerator.
 
 /**
  * @param {bigint} seed
+ * @param {string} cite_label
+ * @param {string} sysname
+ * @param {string} rules
+ * @returns {string}
+ */
+export function generate_bibtex_entry(seed, cite_label, sysname, rules) {
+    let deferred4_0;
+    let deferred4_1;
+    try {
+        const ptr0 = passStringToWasm0(cite_label, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(sysname, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passStringToWasm0(rules, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ret = wasm.generate_bibtex_entry(seed, ptr0, len0, ptr1, len1, ptr2, len2);
+        deferred4_0 = ret[0];
+        deferred4_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
+    }
+}
+
+/**
+ * @param {bigint} seed
+ * @param {string} graph_rules
+ * @returns {string}
+ */
+export function generate_graph_data(seed, graph_rules) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(graph_rules, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.generate_graph_data(seed, ptr0, len0);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
+ * @param {bigint} seed
  * @param {string} author1
  * @param {string} author2
  * @param {string} sysname

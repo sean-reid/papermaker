@@ -300,3 +300,31 @@ pub fn generate_paper(seed: u64, author1: &str, author2: &str, sysname: &str, ru
     // Pretty print
     gen.pretty_print(&paper)
 }
+
+#[wasm_bindgen]
+pub fn generate_graph_data(seed: u64, graph_rules: &str) -> String {
+    let mut gen = ScigenGenerator::new(seed);
+    
+    // Load graph rules
+    gen.load_rules(graph_rules);
+    
+    // Generate gnuplot commands
+    gen.generate("GNUPLOT")
+}
+
+#[wasm_bindgen]
+pub fn generate_bibtex_entry(seed: u64, cite_label: &str, sysname: &str, rules: &str) -> String {
+    let mut gen = ScigenGenerator::new(seed);
+    
+    // Load rules
+    gen.load_rules(rules);
+    
+    // Add citation label
+    gen.add_rule("CITE_LABEL_GIVEN", cite_label);
+    
+    // Add system name for citation
+    gen.add_rule("SYSNAME", sysname);
+    
+    // Generate bibliography entry
+    gen.generate("BIBTEX_ENTRY")
+}

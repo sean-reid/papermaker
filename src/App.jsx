@@ -23,11 +23,13 @@ function App() {
     scigenWorkerRef.current.onmessage = (e) => {
       if (e.data.type === 'paper-generated') {
         const latex = e.data.latex
+        const graphData = e.data.graphData
+        const bibliography = e.data.bibliography
         setLatexContent(latex)
         setIsLoading(false)
         
-        // Automatically compile to PDF
-        compileToPDF(latex)
+        // Compile to PDF with bibtex support
+        compileToPDF(latex, graphData, bibliography)
       } else if (e.data.type === 'error') {
         console.error('SCIGen error:', e.data.error)
         setError('Failed to generate paper: ' + e.data.error)
@@ -95,13 +97,15 @@ function App() {
     })
   }
 
-  const compileToPDF = (latex) => {
+  const compileToPDF = (latex, graphData, bibliography) => {
     if (!latexWorkerRef.current) return
     
     setIsCompiling(true)
     latexWorkerRef.current.postMessage({
       type: 'compile-latex',
-      latex
+      latex,
+      graphData,
+      bibliography
     })
   }
 

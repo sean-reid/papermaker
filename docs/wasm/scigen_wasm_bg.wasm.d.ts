@@ -2,6 +2,8 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const __wbg_scigengenerator_free: (a: number, b: number) => void;
+export const generate_bibtex_entry: (a: bigint, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number];
+export const generate_graph_data: (a: bigint, b: number, c: number) => [number, number];
 export const generate_paper: (a: bigint, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => [number, number];
 export const scigengenerator_add_rule: (a: number, b: number, c: number, d: number, e: number) => void;
 export const scigengenerator_generate: (a: number, b: number, c: number) => [number, number];
