@@ -1,0 +1,15 @@
+{
+  "name": "scigen-wasm",
+  "type": "module",
+  "version": "1.0.0",
+  "files": [
+    "scigen_wasm_bg.wasm",
+    "scigen_wasm.js",
+    "scigen_wasm.d.ts"
+  ],
+  "main": "scigen_wasm.js",
+  "types": "scigen_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

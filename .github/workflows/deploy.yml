@@ -3,6 +3,8 @@ name: Build and Deploy
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
@@ -34,7 +36,9 @@ jobs:
         run: npm ci
       
       - name: Build WASM
-        run: npm run build:wasm
+        run: |
+          npm run build:wasm
+          rm -f public/wasm/.gitignore
       
       - name: Build frontend
         run: npm run build
@@ -42,9 +46,10 @@ jobs:
       - name: Add .nojekyll
         run: touch docs/.nojekyll
       
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: docs
-          branch: gh-pages
-          clean: true
+      - name: Commit and push docs
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add docs/
+          git diff --staged --quiet || git commit -m "Build and deploy to docs/ [skip ci]"
+          git push

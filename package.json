@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run build:wasm && vite build",
-    "build:wasm": "cd wasm && wasm-pack build --target web --out-dir ../public/wasm",
+    "build:wasm": "cd wasm && wasm-pack build --target web --out-dir ../public/wasm && rm -f ../public/wasm/.gitignore",
     "preview": "vite preview"
   },
   "dependencies": {
